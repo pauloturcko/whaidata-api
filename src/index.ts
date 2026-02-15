@@ -1,11 +1,17 @@
 import express from 'express';
-import { AppDataSource } from './data-source';
+import {appDataSource} from './db/config/data-source';
 import 'dotenv/config';
+import {userRouter} from "./http/routes/user-routes";
+
 
 const app = express();
+app.use(express.json());
 const PORT = 3000;
 
-AppDataSource.initialize()
+app.use(userRouter)
+
+
+appDataSource.initialize()
     .then(() => {
         console.log('Database connected successfully!');
 
