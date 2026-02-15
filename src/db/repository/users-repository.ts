@@ -17,4 +17,8 @@ export class UsersRepository {
     async loadByEmail(email: string): Promise<Users | null> {
         return await this.repository.findOne({ where: { email } });
     }
+
+    async loadById(id: number | undefined): Promise<Users | null> {
+        return await this.repository.findOne({ where: { id } });
+    }
 }
