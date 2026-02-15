@@ -2,6 +2,7 @@ import express from 'express';
 import {appDataSource} from './db/config/data-source';
 import 'dotenv/config';
 import {userRouter} from "./http/routes/user-routes";
+import {authRouter} from "./http/routes/auth-routes";
 
 
 const app = express();
@@ -9,6 +10,7 @@ app.use(express.json());
 const PORT = 3000;
 
 app.use(userRouter)
+app.use(authRouter)
 
 
 appDataSource.initialize()
