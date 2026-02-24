@@ -3,14 +3,16 @@ import {appDataSource} from './db/config/data-source';
 import 'dotenv/config';
 import {userRouter} from "./http/routes/user-routes";
 import {authRouter} from "./http/routes/auth-routes";
+import {cardRouter} from "./http/routes/card-routes";
 
 
 const app = express();
 app.use(express.json());
 const PORT = 3000;
 
-app.use(userRouter)
-app.use(authRouter)
+app.use("/users", userRouter)
+app.use("/users", authRouter)
+app.use("/cards", cardRouter)
 
 
 appDataSource.initialize()

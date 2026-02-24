@@ -1,0 +1,16 @@
+import {Repository} from "typeorm";
+import {appDataSource} from "../config/data-source";
+import {Cards} from "../models/cards";
+import {RegisterCardTypeDto} from "../DTO/cards-dto";
+
+export class CardsRepository {
+    private repository: Repository<Cards>;
+
+    constructor() {
+        this.repository = appDataSource.getRepository(Cards);
+    }
+
+    async create (data: RegisterCardTypeDto): Promise<Cards> {
+        return await this.repository.save(data);
+    }
+}
