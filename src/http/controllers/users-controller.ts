@@ -1,61 +1,52 @@
-import {UsersRepository} from "../../db/repository/users-repository";
-import {registerValidator} from "../validators/register-validator";
 import {ZodError} from "zod";
 import type {Request, Response} from "express";
-import {hashPassword} from "../../utils/hash-password";
+import {UsersService} from "../../services/users-service";
 
 export class UsersController {
-    private userRepository: UsersRepository;
+    private userService: UsersService;
 
     constructor() {
-        this.userRepository = new UsersRepository();
+        this.userService = new UsersService();
     }
 
     async register(req: Request, res: Response) {
         try {
-            const {name, email, password} = registerValidator.parse(req.body);
-
-            const emailInUse = await this.userRepository.loadByEmail(email);
-            if(emailInUse) {
-                res.status(409).json({message: "Email already exists"});
-                return
-            }
-
-            const hashedPassword = await hashPassword(password);
-            const createdUser = await this.userRepository.create({email: email, name: name, password: hashedPassword});
+            const result = await this.userService.register(req.body);
 
             res.status(201).json({
                 message: "User registered successfully",
-                createdUser,
+                result,
             });
         } catch (error) {
-            if(error instanceof ZodError) {
+            if (error instanceof ZodError) {
                 res.status(400).json({
                     errors: error,
                 })
             } else {
-                res.status(500).json({ error });
+                res.status(500).json({error});
+            }
         }
     }
-}
 
     async getLoggedUser(req: Request, res: Response) {
-        const { user } = req;
-        if(!user) {
-            res.status(401).json({message: "Unauthorized"});
-        }
+        try {
+            const {user} = req;
 
-        const savedUser = await this.userRepository.loadById(user?.id)
-        if(!savedUser) {
-            res.status(401).json({message: "Unauthorized"});
-        }
+            if (!user) {
+                return res.status(401).json({message: "Unauthorized"});
+            }
 
-        res.status(200).json({
-            id: savedUser?.id,
-            name: savedUser?.name,
-            email: savedUser?.email,
-            createdAt: savedUser?.createdAt,
-            profilePicture: savedUser?.profilePicture,
-        })
+            const savedUser = await this.userService.getLoggedUser(user.id);
+
+            return res.status(200).json({
+                id: savedUser.id,
+                name: savedUser.name,
+                email: savedUser.email,
+                createdAt: savedUser.createdAt,
+                profilePicture: savedUser.profilePicture,
+            });
+        } catch (error) {
+            return res.status(401).json({message: "Unauthorized"});
+        }
     }
 }
