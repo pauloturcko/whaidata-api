@@ -1,50 +1,27 @@
-import {Request, Response} from "express";
-import {UsersRepository} from "../../db/repository/users-repository";
-import {authValidator} from "../validators/auth-validator";
-import {verifyPassword} from "../../utils/hash-password";
-import {generateToken} from "../../utils/jwt";
+import type {Request, Response} from "express";
 import {ZodError} from "zod";
+import {AuthService} from "../../services/auth-service";
+import {UnauthorizedError} from "../../errors";
 
 export class AuthController {
-    private userRepository: UsersRepository;
+    private authService = new AuthService();
 
-    constructor() {
-        this.userRepository = new UsersRepository();
-    }
-
-    async authentication(req: Request, res: Response): Promise<void> {
+    async authentication(req: Request, res: Response) {
         try {
-            const { email, password } = authValidator.parse(req.body);
-            const user = await this.userRepository.loadByEmail(email);
-            if (!user) {
-                res.status(401).json({
-                    message: 'Unauthorized',
-                });
-                return;
-            }
+            const result = await this.authService.authentication(req.body);
 
-            const isPasswordValid = await verifyPassword(password, user?.password as string);
-            if (!isPasswordValid) {
-                res.status(401).json({
-                    message: 'Unauthorized',
-                });
-                return;
-            }
+            return res.status(200).json(result);
 
-            const token = generateToken(user?.id)
-            res.status(200).json({
-                token,
-            })
         } catch (error) {
             if (error instanceof ZodError) {
-                res.status(400).json({
-                    error: error,
-                });
-            } else {
-                res.status(500).json({
-                    error,
-                });
+                return res.status(400).json({ errors: error });
             }
+
+            if (error instanceof UnauthorizedError) {
+                return res.status(401).json({ message: "Unauthorized" });
+            }
+
+            return res.status(500).json({ error });
         }
     }
 }
