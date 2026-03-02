@@ -6,7 +6,10 @@
   "scripts": {
     "start": "ts-node --files src/index.ts",
     "build": "tsc",
-    "dev": "ts-node-dev --files src/index.ts"
+    "dev": "ts-node-dev --files src/index.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/db/config/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/db/config/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/db/config/data-source.ts"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +29,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "pg": "^8.18.0",
+    "pg": "^8.19.0",
+    "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.28",
     "zod": "^4.3.6"
   }
