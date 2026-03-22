@@ -1,4 +1,5 @@
-import {Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {Cards} from "./cards";
 
 @Entity('users')
 export class Users {
@@ -15,7 +16,7 @@ export class Users {
     @Column({type: 'varchar'})
     password: string;
 
-    @Column({nullable: true, type: 'varchar', name: 'profile_picture' })
+    @Column({nullable: true, type: 'varchar', name: 'profile_picture'})
     profilePicture?: string;
 
     @CreateDateColumn({type: 'timestamp', name: 'created_at'})
@@ -23,4 +24,7 @@ export class Users {
 
     @UpdateDateColumn({type: 'timestamp', name: 'updated_at'})
     updatedAt: Date;
+
+    @OneToMany(() => Cards, (cards) => cards.owner)
+    cards: Cards[];
 }
