@@ -1,5 +1,5 @@
-import {Column, Entity, PrimaryGeneratedColumn, Unique} from "typeorm";
-import {CardTypeEnum} from "../enum/card-type-enum";
+import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique} from "typeorm";
+import {Users} from "./users";
 
 @Entity("cards")
 @Unique(["userId", "name", "lastFourDigits"])
@@ -16,7 +16,7 @@ export class Cards {
     @Column({type: "varchar", length: 7})
     color: string;
 
-    @Column({name: "card_type", type: "enum", enum: CardTypeEnum})
+    @Column({name: "card_type", type: "int"})
     cardType: number;
 
     @Column({name: "expires_in", type: "date"})
@@ -24,4 +24,8 @@ export class Cards {
 
     @Column({name: "last_four_digits", type: "char", length: 4})
     lastFourDigits: string;
+
+    @ManyToOne(() => Users, (cards) => cards.cards)
+    @JoinColumn({name: "user_id"})
+    owner: Users
 }
