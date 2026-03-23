@@ -1,7 +1,7 @@
 import {Repository} from "typeorm";
 import {appDataSource} from "../config/data-source";
 import {Cards} from "../models/cards";
-import {RegisterCardTypeDto} from "../DTO/cards-dto";
+import {CreateCardDto, UpdateCardDTO} from "../DTO/cards-dto";
 
 type UniqueCard = {
     userId: number,
@@ -16,7 +16,7 @@ export class CardsRepository {
         this.repository = appDataSource.getRepository(Cards);
     }
 
-    async create(data: RegisterCardTypeDto): Promise<Cards> {
+    async create(data: CreateCardDto): Promise<Cards> {
         return await this.repository.save(data);
     }
 
@@ -28,5 +28,21 @@ export class CardsRepository {
                 lastFourDigits: params.lastFourDigits,
             },
         });
+    }
+
+    async loadAll(userId: number): Promise<Cards[]> {
+        return await this.repository.find({where: {userId}});
+    }
+
+    async loadById(id: number): Promise<Cards | null> {
+        return await this.repository.findOne({where: {id}})
+    }
+
+    async update(data: UpdateCardDTO): Promise<Cards> {
+        return await this.repository.save({...data});
+    }
+
+    async delete(id: number): Promise<void> {
+        await this.repository.delete({id})
     }
 }

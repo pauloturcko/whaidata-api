@@ -35,3 +35,8 @@ export const createCardValidator = z.object({
         .string()
         .regex(/^\d{4}$/, "Cartão inválido"),
 });
+export const updateCardValidator = createCardValidator
+    .partial()
+    .extend({
+        id: z.number(),
+    });
