@@ -1,6 +1,7 @@
 import {CardsRepository} from "../db/repository/cards-repository";
-import {createCardValidator} from "../http/validators/card-validator";
+import {createCardValidator, updateCardValidator} from "../http/validators/card-validator";
 import {GenericError} from "../errors";
+import {Cards} from "../db/models/cards";
 
 export class CardsService {
     private cardsRepository = new CardsRepository();
@@ -29,5 +30,36 @@ export class CardsService {
             expiresIn,
             lastFourDigits,
         });
+    }
+
+    async loadAll(userId: number): Promise<Cards[]> {
+        return await this.cardsRepository.loadAll(userId);
+    }
+
+    async update(userId: number, data: unknown): Promise<Cards> {
+        const parsedData = updateCardValidator.parse(data);
+
+        const card = await this.cardsRepository.loadById(parsedData.id);
+        if (!card) throw new GenericError('Card does not exist!');
+        if (card.userId !== userId) throw new GenericError('Unauthorized');
+
+        if (parsedData.name) {
+            parsedData.name = parsedData.name.trim().toLowerCase();
+        }
+
+        const updatedCardData = {
+            ...card,
+            ...parsedData
+        };
+
+        return await this.cardsRepository.update(updatedCardData);
+    }
+
+    async delete(userId: number, id: number): Promise<void> {
+        const card = await this.cardsRepository.loadById(id);
+        if (!card) throw new GenericError('Card does not exist!');
+        if (card.userId !== userId) throw new GenericError('Unauthorized');
+
+        return await this.cardsRepository.delete(id);
     }
 }
