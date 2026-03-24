@@ -4,6 +4,7 @@ import 'dotenv/config';
 import {userRouter} from "./http/routes/user-routes";
 import {authRouter} from "./http/routes/auth-routes";
 import {cardRouter} from "./http/routes/card-routes";
+import {paymentMethodsRouter} from "./http/routes/payment-methods-routes";
 
 
 const app = express();
@@ -13,6 +14,7 @@ const PORT = 3000;
 app.use("/users", userRouter)
 app.use("/users", authRouter)
 app.use("/cards", cardRouter)
+app.use("/payment-method", paymentMethodsRouter)
 
 
 appDataSource.initialize()

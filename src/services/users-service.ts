@@ -1,5 +1,5 @@
 import {UsersRepository} from "../db/repository/users-repository";
-import {registerValidator} from "../http/validators/register-validator";
+import {registerValidator} from "./validators/register-validator";
 import {Users} from "../db/models/users";
 import {GenericError} from "../errors";
 import {hashPassword} from "../utils/hash-password";

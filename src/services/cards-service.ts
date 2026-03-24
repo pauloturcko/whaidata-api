@@ -1,5 +1,5 @@
 import {CardsRepository} from "../db/repository/cards-repository";
-import {createCardValidator, updateCardValidator} from "../http/validators/card-validator";
+import {createCardValidator, updateCardValidator} from "./validators/card-validator";
 import {GenericError} from "../errors";
 import {Cards} from "../db/models/cards";
 
