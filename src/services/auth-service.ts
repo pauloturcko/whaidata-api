@@ -1,4 +1,4 @@
-import {authValidator} from "../http/validators/auth-validator";
+import {authValidator} from "./validators/auth-validator";
 import {verifyPassword} from "../utils/hash-password";
 import {generateToken} from "../utils/jwt";
 import {UsersRepository} from "../db/repository/users-repository";
@@ -12,7 +12,7 @@ export class AuthService {
     }
 
     async authentication(data: unknown): Promise<{ token: string }> {
-        const { email, password } = authValidator.parse(data);
+        const {email, password} = authValidator.parse(data);
 
         const user = await this.userRepository.loadByEmail(email);
         if (!user) {
@@ -26,6 +26,6 @@ export class AuthService {
 
         const token = generateToken(user.id);
 
-        return { token };
+        return {token};
     }
 }
