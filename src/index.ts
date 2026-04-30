@@ -9,7 +9,7 @@ import {paymentMethodsRouter} from "./http/routes/payment-methods-routes";
 
 const app = express();
 app.use(express.json());
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use("/users", userRouter)
 app.use("/users", authRouter)
