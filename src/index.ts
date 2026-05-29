@@ -8,7 +8,22 @@ import { cardRouter } from "./http/routes/card-routes";
 import { paymentMethodsRouter } from "./http/routes/payment-methods-routes";
 
 const app = express();
-app.use(cors({ origin: "http://localhost:3000" }));
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(",")
+  : ["http://localhost:3000"];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes("*")) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
