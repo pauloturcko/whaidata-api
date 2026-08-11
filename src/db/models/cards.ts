@@ -13,11 +13,14 @@ export class Cards {
     @Column({type: "varchar"})
     name: string;
 
-    @Column({type: "varchar", length: 7})
-    color: string;
+    @Column({type: "decimal", precision: 12, scale: 2})
+    limit: number;
 
     @Column({name: "card_type", type: "int"})
     cardType: number;
+
+    @Column({name: "card_flag", type: "int"})
+    cardFlag: number;
 
     @Column({name: "expires_in", type: "date"})
     expiresIn: Date;
