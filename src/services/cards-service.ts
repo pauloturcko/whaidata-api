@@ -7,7 +7,7 @@ export class CardsService {
     private cardsRepository = new CardsRepository();
 
     async create(userId: number, data: unknown) {
-        const {name, color, cardType, expiresIn, lastFourDigits} =
+        const {name, limit, cardType, cardFlag, expiresIn, lastFourDigits} =
             createCardValidator.parse(data);
 
         const normalizedName = name.trim().toLowerCase();
@@ -25,8 +25,9 @@ export class CardsService {
         return await this.cardsRepository.create({
             userId,
             name: normalizedName,
-            color,
             cardType,
+            limit,
+            cardFlag,
             expiresIn,
             lastFourDigits,
         });

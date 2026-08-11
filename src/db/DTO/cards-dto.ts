@@ -1,11 +1,13 @@
+import { CardFlagEnum } from "../enum/card-flag-enum";
 import {CardTypeEnum} from "../enum/card-type-enum";
 
 export interface CreateCardDto {
     name: string;
     userId: number;
-    color: string;
     cardType: CardTypeEnum;
+    cardFlag: CardFlagEnum;
     expiresIn: Date;
+    limit: number;
     lastFourDigits: string;
 }
 

@@ -28,12 +28,17 @@ export class Cards1774214054264 implements MigrationInterface {
                     isNullable: false
                 },
                 {
-                    name: "color",
-                    type: "varchar",
-                    length: '7'
+                    name: "limit",
+                    type: "decimal",
+                    precision: 12,
+                    scale: 2,
                 },
                 {
                     name: "card_type",
+                    type: "int",
+                },
+                {
+                    name: "card_flag",
                     type: "int",
                 },
                 {
