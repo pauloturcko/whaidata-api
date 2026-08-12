@@ -1,4 +1,5 @@
 import express from "express";
+import http from "http";
 import cors from "cors";
 import { appDataSource } from "./db/config/data-source";
 import "dotenv/config";
@@ -41,7 +42,8 @@ appDataSource
       res.send("DB Connected!");
     });
 
-    app.listen(Number(PORT), "0.0.0.0", () => {
+    const server = http.createServer(app);
+    server.listen(Number(PORT), "0.0.0.0", () => {
       console.log(`Listening on port: ${PORT}`);
     });
   })
