@@ -1,26 +1,25 @@
-import {PaymentMethodsRepository} from "../db/repository/payment-methods-repository";
-import {createPaymentMethodValidator} from "./validators/payment-methods-validator";
-import {NormalizeCase} from "../utils/normalize-case";
-import {GenericError} from "../errors";
+import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
+import { UsersRepository } from "../db/repository/users-repository";
+import { GenericError } from "../errors";
 
 export class PaymentMethodsService {
-    private paymentMethodsRepository = new PaymentMethodsRepository();
+    private userPaymentPreferencesRepository: UserPaymentPreferencesRepository;
+    private userRepository: UsersRepository;
+    
 
-    async create(userId: number, data: unknown) {
-        const {name, color} = createPaymentMethodValidator.parse(data);
-        const normalizedName = NormalizeCase(name);
+    constructor() {
+        this.userPaymentPreferencesRepository = new UserPaymentPreferencesRepository()
+        this.userRepository = new UsersRepository();
+        
+    }
 
-        const existingPaymentMethods = await this.paymentMethodsRepository.loadAll(userId)
-        const alreadyExists = existingPaymentMethods.some(item => item.name === normalizedName);
-        if (alreadyExists) {
-            throw new GenericError(`Already exists: ${name}`);
+    async getUserPreferences(userId: number) {
+        const user = await this.userRepository.loadById(userId);
+        
+        if (!user) {
+            throw new GenericError("Unauthorized");
         }
-        const validData = {
-            userId,
-            name: normalizedName,
-            color,
-        }
 
-        return await this.paymentMethodsRepository.create(validData)
+        return await this.userPaymentPreferencesRepository.loadByUserId(userId)
     }
 }

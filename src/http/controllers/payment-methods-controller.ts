@@ -10,19 +10,16 @@ export class PaymentMethodsController {
         this.paymentMethodsService = new PaymentMethodsService()
     }
 
-    async register(req: Request, res: Response) {
+    async list(req: Request, res: Response) {
         try {
             const userId = req.user?.id;
             if (!userId) {
                 return res.status(401).json({message: "Unauthorized"});
             }
 
-            const paymentMethod = await this.paymentMethodsService.create(userId, req.body)
+            const preferences = await this.paymentMethodsService.getUserPreferences(userId)
 
-            return res.status(201).json({
-                message: "Payment method registered successfully",
-                paymentMethod,
-            });
+            return res.status(200).json(preferences);
 
         } catch (error) {
             if (error instanceof ZodError) {

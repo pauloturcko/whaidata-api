@@ -3,12 +3,18 @@ import {registerValidator} from "./validators/register-validator";
 import {Users} from "../db/models/users";
 import {GenericError} from "../errors";
 import {hashPassword} from "../utils/hash-password";
+import { PaymentMethodsRepository } from "../db/repository/payment-methods-repository";
+import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
 
 export class UsersService {
     private userRepository: UsersRepository;
+    private paymentMethodsRepository: PaymentMethodsRepository
+    private userPaymentPreferencesRepository: UserPaymentPreferencesRepository
 
     constructor() {
         this.userRepository = new UsersRepository();
+        this.paymentMethodsRepository = new PaymentMethodsRepository();
+        this.userPaymentPreferencesRepository = new UserPaymentPreferencesRepository();
     }
 
     async register(data: unknown): Promise<Users> {
@@ -20,11 +26,15 @@ export class UsersService {
         }
 
         const hashedPassword = await hashPassword(password);
-        return await this.userRepository.create({
+        const newUser = await this.userRepository.create({
             email,
             name,
             password: hashedPassword
         });
+
+        const paymentMethods = await this.paymentMethodsRepository.findAll()
+        await this.userPaymentPreferencesRepository.createDefaultPreferences(newUser.id, paymentMethods)
+        return newUser;
     }
 
     async getLoggedUser(userId: number): Promise<Users> {

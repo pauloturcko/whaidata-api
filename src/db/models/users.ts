@@ -1,6 +1,7 @@
 import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {Cards} from "./cards";
 import {PaymentMethods} from "./payment-methods";
+import { UserPaymentPreferences } from "./user-payment-preferences";
 
 @Entity('users')
 export class Users {
@@ -29,6 +30,6 @@ export class Users {
     @OneToMany(() => Cards, (cards) => cards.owner)
     cards: Cards[];
 
-    @OneToMany(() => PaymentMethods, (paymentMethods) => paymentMethods.owner)
-    paymentMethods: PaymentMethods[];
+    @OneToMany(() => UserPaymentPreferences, (pref) => pref.user)
+    paymentPreferences: UserPaymentPreferences[];
 }
