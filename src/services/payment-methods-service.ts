@@ -22,4 +22,16 @@ export class PaymentMethodsService {
 
         return await this.userPaymentPreferencesRepository.loadByUserId(userId)
     }
+
+    async togglePreference(userId: number, paymentMethodId: number) {
+        const preference = await this.userPaymentPreferencesRepository.findByUserAndMethod(userId, paymentMethodId)
+
+        if(!preference) {
+            throw new GenericError("Payment method not found")
+        }
+
+        preference.isActive = !preference.isActive
+
+        return await this.userPaymentPreferencesRepository.save(preference)
+    }
 }

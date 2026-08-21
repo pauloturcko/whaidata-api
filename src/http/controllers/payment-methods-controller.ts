@@ -31,4 +31,26 @@ export class PaymentMethodsController {
             }
         }
     }
+
+    async toggle(req: Request, res: Response) {
+        try {
+            const userId = req.user?.id;
+            if(!userId) {
+                return res.status(401).json({message: "Unauthorized"})
+            }
+
+            const paymentMethodId = Number(req.params.id);
+            const updated = await this.paymentMethodsService.togglePreference(userId, paymentMethodId)
+
+            return res.status(200).json(updated)
+        } catch (error) {
+            if (error instanceof ZodError) {
+                return res.status(400).json({error: error.message});
+            } else if (error instanceof GenericError) {
+                return res.status(409).json({message: error.message});
+            } else {
+                return res.status(500).json({error});
+            }
+        }
+    }
 }

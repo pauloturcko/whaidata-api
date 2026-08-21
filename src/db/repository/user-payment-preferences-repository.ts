@@ -31,4 +31,17 @@ export class UserPaymentPreferencesRepository {
             }
         })
     }
+
+    async findByUserAndMethod(userId: number, paymentMethodId: number) {
+        return await this.repository.findOne({
+            where: {userId, paymentMethodId},
+            relations: {
+                paymentMethod: true
+            }
+        })
+    }
+
+    async save(preference: UserPaymentPreferences): Promise<UserPaymentPreferences> {
+        return await this.repository.save(preference)
+    }
 }
