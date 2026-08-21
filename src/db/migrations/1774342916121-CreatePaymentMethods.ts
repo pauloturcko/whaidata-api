@@ -14,19 +14,22 @@ export class CreatePaymentMethods1774342916121 implements MigrationInterface {
                     generationStrategy: "increment"
                 },
                 {
-                    name: "user_id",
-                    type: "int",
-                },
-                {
                     name: "name",
                     type: "varchar",
                     length: "50",
                     isNullable: false
                 },
                 {
-                    name: "color",
+                    name: "slug",
                     type: "varchar",
-                    length: '7'
+                    length: "50",
+                    isUnique: true,
+                    isNullable: false
+                },
+                {
+                    name: "requires_card",
+                    type: "boolean",
+                    isNullable: false
                 },
                 {
                     name: "created_at",
@@ -40,14 +43,16 @@ export class CreatePaymentMethods1774342916121 implements MigrationInterface {
                     onUpdate: "now()",
                 }
             ],
-            foreignKeys: [
-                {
-                    columnNames: ["user_id"],
-                    referencedColumnNames: ["id"],
-                    referencedTableName: "users",
-                    onDelete: "CASCADE",
-                }]
         }))
+
+        await queryRunner.query(`
+            INSERT INTO payment_methods (name, slug, requires_card) VALUES
+            ('Pix', 'pix', false),
+            ('Boleto', 'bank_slip', false),
+            ('Dinheiro', 'cash', false),
+            ('Cartão de Débito', 'debit_card', true),
+            ('Cartão de Crédito', 'credit_card', true)
+        `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
