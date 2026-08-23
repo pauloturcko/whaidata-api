@@ -3,6 +3,8 @@ import http from "http";
 import cors from "cors";
 import { appDataSource } from "./db/config/data-source";
 import "dotenv/config";
+import swaggerUi from "swagger-ui-express";
+import { swaggerDocument } from "./docs/swagger";
 import { userRouter } from "./http/routes/user-routes";
 import { authRouter } from "./http/routes/auth-routes";
 import { cardRouter } from "./http/routes/card-routes";
@@ -26,6 +28,9 @@ app.use(
   })
 );
 app.use(express.json());
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument))
+
 const PORT = process.env.PORT || 3000;
 
 app.use("/users", userRouter);
