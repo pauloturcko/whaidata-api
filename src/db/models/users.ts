@@ -1,7 +1,8 @@
-import {Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
+import {Column, CreateDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {Cards} from "./cards";
 import {PaymentMethods} from "./payment-methods";
 import { UserPaymentPreferences } from "./user-payment-preferences";
+import { UserSystemPreferences } from "./user-system-preferences";
 
 @Entity('users')
 export class Users {
@@ -32,4 +33,7 @@ export class Users {
 
     @OneToMany(() => UserPaymentPreferences, (pref) => pref.user)
     paymentPreferences: UserPaymentPreferences[];
+
+    @OneToOne(() => UserSystemPreferences, (pref) => pref.user)
+    systemPreferences: UserSystemPreferences;
 }

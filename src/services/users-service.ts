@@ -5,16 +5,22 @@ import {GenericError} from "../errors";
 import {hashPassword} from "../utils/hash-password";
 import { PaymentMethodsRepository } from "../db/repository/payment-methods-repository";
 import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
+import { UserSystemPreferencesRepository } from "../db/repository/user-system-preferences-repository";
+import { ThemeEnum } from "../db/enum/theme-enum";
+import { LanguagesEnum } from "../db/enum/languages-enum";
+import { CurrencyEnum } from "../db/enum/currency-enum";
 
 export class UsersService {
     private userRepository: UsersRepository;
     private paymentMethodsRepository: PaymentMethodsRepository
     private userPaymentPreferencesRepository: UserPaymentPreferencesRepository
+    private userSystemPreferencesRepository: UserSystemPreferencesRepository
 
     constructor() {
         this.userRepository = new UsersRepository();
         this.paymentMethodsRepository = new PaymentMethodsRepository();
         this.userPaymentPreferencesRepository = new UserPaymentPreferencesRepository();
+        this. userSystemPreferencesRepository = new UserSystemPreferencesRepository();
     }
 
     async register(data: unknown): Promise<Users> {
@@ -34,6 +40,7 @@ export class UsersService {
 
         const paymentMethods = await this.paymentMethodsRepository.findAll()
         await this.userPaymentPreferencesRepository.createDefaultPreferences(newUser.id, paymentMethods)
+        await this.userSystemPreferencesRepository.createDefaultPreferences(newUser.id, ThemeEnum.dark, LanguagesEnum.portuguese, CurrencyEnum.brl)
         return newUser;
     }
 
