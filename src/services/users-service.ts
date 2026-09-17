@@ -9,6 +9,14 @@ import { UserSystemPreferencesRepository } from "../db/repository/user-system-pr
 import { ThemeEnum } from "../db/enum/theme-enum";
 import { LanguagesEnum } from "../db/enum/languages-enum";
 import { CurrencyEnum } from "../db/enum/currency-enum";
+import { UserPaymentMethodsDto } from "../db/DTO/user-payment-preferences";
+import { UserSystemPreferences } from "../db/DTO/user-system-preferences";
+
+type UserPreferences = {
+    user: Users,
+    paymentPreferences: UserPaymentMethodsDto[],
+    systemPreferences: UserSystemPreferences | null
+}
 
 export class UsersService {
     private userRepository: UsersRepository;
@@ -44,13 +52,35 @@ export class UsersService {
         return newUser;
     }
 
-    async getLoggedUser(userId: number): Promise<Users> {
-        const user = await this.userRepository.loadById(userId);
+async getLoggedUser(userId: number): Promise<UserPreferences> {
+    const user = await this.userRepository.loadById(userId);
 
-        if (!user) {
-            throw new GenericError("Unauthorized");
-        }
-
-        return user;
+    if (!user) {
+        throw new GenericError("Unauthorized");
     }
+
+    const [systemPreferencesResult, paymentPreferencesResult] = await Promise.all([
+        this.userSystemPreferencesRepository.loadByUserId(user.id),
+        this.userPaymentPreferencesRepository.loadByUserId(user.id)
+    ]);
+
+    const systemPreferences: UserSystemPreferences | null = systemPreferencesResult && {
+        theme: systemPreferencesResult.theme,
+        language: systemPreferencesResult.language,
+        currency: systemPreferencesResult.currency,
+    };
+
+    const paymentPreferences: UserPaymentMethodsDto[] = paymentPreferencesResult.map(preference => ({
+        paymentMethodId: preference.paymentMethodId,
+        name: preference.paymentMethod.name,
+        slug: preference.paymentMethod.slug,
+        isActive: preference.isActive,
+    }));
+
+    return {
+        user,
+        systemPreferences,
+        paymentPreferences
+    };
+}
 }

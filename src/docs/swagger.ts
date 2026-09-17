@@ -62,6 +62,75 @@ export const swaggerDocument = {
           },
         },
       },
+      UserResponse: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
+          name: { type: "string", example: "João Silva" },
+          email: { type: "string", format: "email", example: "joao@email.com" },
+          createdAt: { type: "string", format: "date-time" },
+          profilePicture: { type: "string", nullable: true, example: null },
+        },
+      },
+      SystemPreferencesResponse: {
+        type: "object",
+        properties: {
+          theme: {
+            type: "integer",
+            enum: [0, 1],
+            description: "0 = dark, 1 = light",
+            example: 0,
+          },
+          language: {
+            type: "integer",
+            enum: [0, 1, 2],
+            description: "0 = português, 1 = inglês, 2 = espanhol",
+            example: 0,
+          },
+          currency: {
+            type: "integer",
+            enum: [0, 1, 2, 3, 4, 5],
+            description: "0 = BRL, 1 = USD, 2 = AUS, 3 = NZD, 4 = EUR, 5 = GBP",
+            example: 0,
+          },
+        },
+      },
+      PaymentPreferenceResponse: {
+        type: "object",
+        properties: {
+          paymentMethodId: { type: "integer", example: 1 },
+          name: { type: "string", example: "Pix" },
+          slug: { type: "string", example: "pix" },
+          isActive: { type: "boolean", example: true },
+        },
+      },
+      LoginResponse: {
+        type: "object",
+        properties: {
+          token: {
+            type: "string",
+            description: "JWT Bearer token, expira em 1h",
+            example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          },
+          user: { $ref: "#/components/schemas/UserResponse" },
+          systemPreferences: { $ref: "#/components/schemas/SystemPreferencesResponse" },
+          paymentPreferences: {
+            type: "array",
+            items: { $ref: "#/components/schemas/PaymentPreferenceResponse" },
+          },
+        },
+      },
+      LoggedUserResponse: {
+        type: "object",
+        properties: {
+          user: { $ref: "#/components/schemas/UserResponse" },
+          systemPreferences: { $ref: "#/components/schemas/SystemPreferencesResponse" },
+          paymentPreferences: {
+            type: "array",
+            items: { $ref: "#/components/schemas/PaymentPreferenceResponse" },
+          },
+        },
+      },
 
       // ===== CARTÕES =====
       CardRegisterInput: {
@@ -211,6 +280,11 @@ export const swaggerDocument = {
         responses: {
           200: {
             description: "Login efetuado com sucesso",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/LoginResponse" },
+              },
+            },
           },
           400: {
             description: "Dados de requisição inválidos",
@@ -228,7 +302,12 @@ export const swaggerDocument = {
         security: [{ bearerAuth: [] }], // Indica que necessita de JWT
         responses: {
           200: {
-            description: "Dados do usuário logado",
+            description: "Dados do usuário logado, com preferências de sistema e de pagamento",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/LoggedUserResponse" },
+              },
+            },
           },
           401: {
             description: "Token inválido ou não fornecido",
