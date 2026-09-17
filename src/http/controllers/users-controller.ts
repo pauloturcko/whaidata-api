@@ -28,25 +28,29 @@ export class UsersController {
         }
     }
 
-    async getLoggedUser(req: Request, res: Response) {
-        try {
-            const {user} = req;
+async getLoggedUser(req: Request, res: Response) {
+    try {
+        const {user} = req;
 
-            if (!user) {
-                return res.status(401).json({message: "Unauthorized"});
-            }
-
-            const savedUser = await this.userService.getLoggedUser(user.id);
-
-            return res.status(200).json({
-                id: savedUser.id,
-                name: savedUser.name,
-                email: savedUser.email,
-                createdAt: savedUser.createdAt,
-                profilePicture: savedUser.profilePicture,
-            });
-        } catch (error) {
+        if (!user) {
             return res.status(401).json({message: "Unauthorized"});
         }
+
+        const savedUser = await this.userService.getLoggedUser(user.id);
+
+        return res.status(200).json({
+            user: {
+                id: savedUser.user.id,
+                name: savedUser.user.name,
+                email: savedUser.user.email,
+                createdAt: savedUser.user.createdAt,
+                profilePicture: savedUser.user.profilePicture,
+            },
+            systemPreferences: savedUser.systemPreferences,
+            paymentPreferences: savedUser.paymentPreferences,
+        });
+    } catch (error) {
+        return res.status(401).json({message: "Unauthorized"});
     }
+}
 }

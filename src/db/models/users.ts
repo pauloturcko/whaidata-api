@@ -1,6 +1,5 @@
 import {Column, CreateDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn} from "typeorm";
 import {Cards} from "./cards";
-import {PaymentMethods} from "./payment-methods";
 import { UserPaymentPreferences } from "./user-payment-preferences";
 import { UserSystemPreferences } from "./user-system-preferences";
 
@@ -16,7 +15,7 @@ export class Users {
     @Column({type: 'varchar', unique: true})
     email: string;
 
-    @Column({type: 'varchar'})
+    @Column({type: 'varchar', select: false})
     password: string;
 
     @Column({nullable: true, type: 'varchar', name: 'profile_picture'})

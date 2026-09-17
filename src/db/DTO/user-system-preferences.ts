@@ -8,3 +8,9 @@ export interface CreateUserSystemPreferences {
     currency?: CurrencyEnum;
     theme?: ThemeEnum;
 }
+
+export interface UserSystemPreferences {
+    language?: LanguagesEnum;
+    currency?: CurrencyEnum;
+    theme?: ThemeEnum;
+}

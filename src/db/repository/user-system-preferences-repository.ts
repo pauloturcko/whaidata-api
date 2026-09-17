@@ -23,10 +23,7 @@ export class UserSystemPreferencesRepository {
 
     async loadByUserId(userId: number): Promise<UserSystemPreferences | null> {
         return await this.repository.findOne({
-            where: {userId},
-            relations: {
-                user: true
-            }
+            where: {userId}
         })
     }
 

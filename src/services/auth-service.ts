@@ -2,16 +2,19 @@ import {authValidator} from "./validators/auth-validator";
 import {verifyPassword} from "../utils/hash-password";
 import {generateToken} from "../utils/jwt";
 import {UsersRepository} from "../db/repository/users-repository";
+import {UsersService} from "./users-service";
 import {UnauthorizedError} from "../errors";
 
 export class AuthService {
     private userRepository: UsersRepository;
+    private usersService: UsersService;
 
     constructor() {
         this.userRepository = new UsersRepository();
+        this.usersService = new UsersService();
     }
 
-    async authentication(data: unknown): Promise<{ token: string }> {
+    async authentication(data: unknown) {
         const {email, password} = authValidator.parse(data);
 
         const user = await this.userRepository.loadByEmail(email);
@@ -25,7 +28,19 @@ export class AuthService {
         }
 
         const token = generateToken(user.id);
+        const loggedUser = await this.usersService.getLoggedUser(user.id);
 
-        return {token};
+        return {
+            token,
+            user: {
+                id: loggedUser.user.id,
+                name: loggedUser.user.name,
+                email: loggedUser.user.email,
+                createdAt: loggedUser.user.createdAt,
+                profilePicture: loggedUser.user.profilePicture,
+            },
+            systemPreferences: loggedUser.systemPreferences,
+            paymentPreferences: loggedUser.paymentPreferences,
+        };
     }
 }
