@@ -1,4 +1,5 @@
 import {MigrationInterface, QueryRunner, Table} from "typeorm";
+import {PaymentMethods} from "../models/payment-methods";
 
 export class CreatePaymentMethods1774342916121 implements MigrationInterface {
 
@@ -45,18 +46,17 @@ export class CreatePaymentMethods1774342916121 implements MigrationInterface {
             ],
         }))
 
-        await queryRunner.query(`
-            INSERT INTO payment_methods (name, slug, requires_card) VALUES
-            ('Pix', 'pix', false),
-            ('Boleto', 'bank_slip', false),
-            ('Dinheiro', 'cash', false),
-            ('Cartão de Débito', 'debit_card', true),
-            ('Cartão de Crédito', 'credit_card', true)
-        `);
+        await queryRunner.manager.insert(PaymentMethods, [
+            {name: "Pix", slug: "pix", requiresCard: false},
+            {name: "Boleto", slug: "bank_slip", requiresCard: false},
+            {name: "Dinheiro", slug: "cash", requiresCard: false},
+            {name: "Cartão de Débito", slug: "debit_card", requiresCard: true},
+            {name: "Cartão de Crédito", slug: "credit_card", requiresCard: true},
+        ]);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query('DROP TABLE payment_methods');
+        await queryRunner.dropTable("payment_methods");
     }
 
 }
