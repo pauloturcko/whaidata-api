@@ -1,7 +1,7 @@
 import {PaymentMethodsService} from "../../services/payment-methods-service";
 import {Request, Response} from "express";
 import {ZodError} from "zod";
-import {GenericError} from "../../errors";
+import {NotFoundError, UnauthorizedError} from "../../errors";
 
 export class PaymentMethodsController {
     private paymentMethodsService: PaymentMethodsService
@@ -24,8 +24,8 @@ export class PaymentMethodsController {
         } catch (error) {
             if (error instanceof ZodError) {
                 return res.status(400).json({error: error.message});
-            } else if (error instanceof GenericError) {
-                return res.status(409).json({message: error.message});
+            } else if (error instanceof UnauthorizedError) {
+                return res.status(401).json({message: error.message});
             } else {
                 return res.status(500).json({error});
             }
@@ -46,8 +46,10 @@ export class PaymentMethodsController {
         } catch (error) {
             if (error instanceof ZodError) {
                 return res.status(400).json({error: error.message});
-            } else if (error instanceof GenericError) {
-                return res.status(409).json({message: error.message});
+            } else if (error instanceof NotFoundError) {
+                return res.status(404).json({message: error.message});
+            } else if (error instanceof UnauthorizedError) {
+                return res.status(401).json({message: error.message});
             } else {
                 return res.status(500).json({error});
             }

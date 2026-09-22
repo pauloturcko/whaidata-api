@@ -1,7 +1,7 @@
 import {Request, Response} from "express";
 import {ZodError} from "zod";
 import {CardsService} from "../../services/cards-service";
-import {GenericError} from "../../errors";
+import {GenericError, NotFoundError, ForbiddenError} from "../../errors";
 
 export class CardsController {
     private cardService: CardsService;
@@ -67,8 +67,12 @@ export class CardsController {
                 res.status(400).json({
                     errors: error,
                 })
-            } else if (error instanceof GenericError) {
-                res.status(409).json({
+            } else if (error instanceof NotFoundError) {
+                res.status(404).json({
+                    message: error.message,
+                })
+            } else if (error instanceof ForbiddenError) {
+                res.status(403).json({
                     message: error.message,
                 })
             } else {
@@ -87,7 +91,17 @@ export class CardsController {
             const cards = await this.cardService.delete(Number(userId), req.body.id);
             res.status(200).json({message: "Card deleted successfully", cards})
         } catch (error) {
-            res.status(500).json({error});
+            if (error instanceof NotFoundError) {
+                res.status(404).json({
+                    message: error.message,
+                })
+            } else if (error instanceof ForbiddenError) {
+                res.status(403).json({
+                    message: error.message,
+                })
+            } else {
+                res.status(500).json({error});
+            }
         }
     }
 }

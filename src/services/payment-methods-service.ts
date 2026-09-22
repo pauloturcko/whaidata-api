@@ -1,6 +1,6 @@
 import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
 import { UsersRepository } from "../db/repository/users-repository";
-import { GenericError } from "../errors";
+import { NotFoundError, UnauthorizedError } from "../errors";
 
 export class PaymentMethodsService {
     private userPaymentPreferencesRepository: UserPaymentPreferencesRepository;
@@ -17,7 +17,7 @@ export class PaymentMethodsService {
         const user = await this.userRepository.loadById(userId);
         
         if (!user) {
-            throw new GenericError("Unauthorized");
+            throw new UnauthorizedError();
         }
 
         return await this.userPaymentPreferencesRepository.loadByUserId(userId)
@@ -27,7 +27,7 @@ export class PaymentMethodsService {
         const preference = await this.userPaymentPreferencesRepository.findByUserAndMethod(userId, paymentMethodId)
 
         if(!preference) {
-            throw new GenericError("Payment method not found")
+            throw new NotFoundError("Payment method not found")
         }
 
         preference.isActive = !preference.isActive
