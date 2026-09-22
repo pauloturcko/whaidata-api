@@ -1,6 +1,7 @@
 import {ZodError} from "zod";
 import type {Request, Response} from "express";
 import {UsersService} from "../../services/users-service";
+import {GenericError, UnauthorizedError} from "../../errors";
 
 export class UsersController {
     private userService: UsersService;
@@ -21,6 +22,10 @@ export class UsersController {
             if (error instanceof ZodError) {
                 res.status(400).json({
                     errors: error,
+                })
+            } else if (error instanceof GenericError) {
+                res.status(409).json({
+                    message: error.message,
                 })
             } else {
                 res.status(500).json({error});
@@ -50,7 +55,11 @@ async getLoggedUser(req: Request, res: Response) {
             paymentPreferences: savedUser.paymentPreferences,
         });
     } catch (error) {
-        return res.status(401).json({message: "Unauthorized"});
+        if (error instanceof UnauthorizedError) {
+            return res.status(401).json({message: "Unauthorized"});
+        }
+
+        return res.status(500).json({error});
     }
 }
 }

@@ -1,7 +1,7 @@
 import {UsersRepository} from "../db/repository/users-repository";
 import {registerValidator} from "./validators/register-validator";
 import {Users} from "../db/models/users";
-import {GenericError} from "../errors";
+import {GenericError, UnauthorizedError} from "../errors";
 import {hashPassword} from "../utils/hash-password";
 import { PaymentMethodsRepository } from "../db/repository/payment-methods-repository";
 import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
@@ -56,7 +56,7 @@ async getLoggedUser(userId: number): Promise<UserPreferences> {
     const user = await this.userRepository.loadById(userId);
 
     if (!user) {
-        throw new GenericError("Unauthorized");
+        throw new UnauthorizedError();
     }
 
     const [systemPreferencesResult, paymentPreferencesResult] = await Promise.all([
