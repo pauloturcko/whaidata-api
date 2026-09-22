@@ -13,8 +13,8 @@ export class Cards {
     @Column({type: "varchar"})
     name: string;
 
-    @Column({type: "decimal", precision: 12, scale: 2})
-    limit: number;
+    @Column({type: "numeric", precision: 12, scale: 2, default: 0})
+    limit: string;
 
     @Column({name: "card_type", type: "int"})
     cardType: number;
@@ -28,7 +28,7 @@ export class Cards {
     @Column({name: "last_four_digits", type: "char", length: 4})
     lastFourDigits: string;
 
-    @ManyToOne(() => Users, (cards) => cards.cards)
+    @ManyToOne(() => Users, (cards) => cards.cards, {onDelete: "CASCADE"})
     @JoinColumn({name: "user_id"})
     owner: Users
 }
