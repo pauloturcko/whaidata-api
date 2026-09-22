@@ -1,22 +1,82 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner, Table, TableColumn, TableForeignKey, TableUnique } from "typeorm";
 
 export class CreateBankAccountAndUpdateCardsLimit1790077180903 implements MigrationInterface {
-    name = 'CreateBankAccountAndUpdateCardsLimit1790077180903'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`CREATE TABLE "bank_account" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "account_type" integer NOT NULL, "balance" numeric(12,2) NOT NULL DEFAULT '0', CONSTRAINT "UQ_abc300513b6a96c2d0d41bc0d4b" UNIQUE ("name", "account_type"), CONSTRAINT "PK_f3246deb6b79123482c6adb9745" PRIMARY KEY ("id"))`);
-        await queryRunner.query(`ALTER TABLE "cards" ALTER COLUMN "limit" SET DEFAULT '0'`);
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" DROP CONSTRAINT "FK_b91ba968d5c8be4ee5a3b14ceb4"`);
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" ADD CONSTRAINT "UQ_b91ba968d5c8be4ee5a3b14ceb4" UNIQUE ("user_id")`);
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" ADD CONSTRAINT "FK_b91ba968d5c8be4ee5a3b14ceb4" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
+        await queryRunner.createTable(new Table({
+            name: "bank_account",
+            uniques: [
+                {
+                    columnNames: ["name", "account_type"]
+                }
+            ],
+            columns: [
+                {
+                    name: "id",
+                    type: "int",
+                    isPrimary: true,
+                    isGenerated: true,
+                    generationStrategy: "increment"
+                },
+                {
+                    name: "name",
+                    type: "varchar",
+                },
+                {
+                    name: "account_type",
+                    type: "int",
+                },
+                {
+                    name: "balance",
+                    type: "numeric",
+                    precision: 12,
+                    scale: 2,
+                    default: 0,
+                },
+            ]
+        }));
+
+        await queryRunner.changeColumn("cards", "limit", new TableColumn({
+            name: "limit",
+            type: "numeric",
+            precision: 12,
+            scale: 2,
+            default: 0,
+        }));
+
+        await queryRunner.dropForeignKey("user_system_preferences", "FK_b91ba968d5c8be4ee5a3b14ceb4");
+        await queryRunner.createUniqueConstraint("user_system_preferences", new TableUnique({
+            name: "UQ_b91ba968d5c8be4ee5a3b14ceb4",
+            columnNames: ["user_id"]
+        }));
+        await queryRunner.createForeignKey("user_system_preferences", new TableForeignKey({
+            name: "FK_b91ba968d5c8be4ee5a3b14ceb4",
+            columnNames: ["user_id"],
+            referencedTableName: "users",
+            referencedColumnNames: ["id"],
+            onDelete: "CASCADE"
+        }));
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" DROP CONSTRAINT "FK_b91ba968d5c8be4ee5a3b14ceb4"`);
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" DROP CONSTRAINT "UQ_b91ba968d5c8be4ee5a3b14ceb4"`);
-        await queryRunner.query(`ALTER TABLE "user_system_preferences" ADD CONSTRAINT "FK_b91ba968d5c8be4ee5a3b14ceb4" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE NO ACTION`);
-        await queryRunner.query(`ALTER TABLE "cards" ALTER COLUMN "limit" DROP DEFAULT`);
-        await queryRunner.query(`DROP TABLE "bank_account"`);
+        await queryRunner.dropForeignKey("user_system_preferences", "FK_b91ba968d5c8be4ee5a3b14ceb4");
+        await queryRunner.dropUniqueConstraint("user_system_preferences", "UQ_b91ba968d5c8be4ee5a3b14ceb4");
+        await queryRunner.createForeignKey("user_system_preferences", new TableForeignKey({
+            name: "FK_b91ba968d5c8be4ee5a3b14ceb4",
+            columnNames: ["user_id"],
+            referencedTableName: "users",
+            referencedColumnNames: ["id"],
+            onDelete: "CASCADE"
+        }));
+
+        await queryRunner.changeColumn("cards", "limit", new TableColumn({
+            name: "limit",
+            type: "numeric",
+            precision: 12,
+            scale: 2,
+        }));
+
+        await queryRunner.dropTable("bank_account");
     }
 
 }

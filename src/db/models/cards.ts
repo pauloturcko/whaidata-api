@@ -1,4 +1,4 @@
-import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique} from "typeorm";
+import {Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn} from "typeorm";
 import {Users} from "./users";
 
 @Entity("cards")
@@ -27,6 +27,12 @@ export class Cards {
 
     @Column({name: "last_four_digits", type: "char", length: 4})
     lastFourDigits: string;
+
+    @CreateDateColumn({name: "created_at", type: "timestamp"})
+    createdAt: Date;
+
+    @UpdateDateColumn({name: "updated_at", type: "timestamp"})
+    updatedAt: Date;
 
     @ManyToOne(() => Users, (cards) => cards.cards, {onDelete: "CASCADE"})
     @JoinColumn({name: "user_id"})

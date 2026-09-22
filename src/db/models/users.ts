@@ -2,6 +2,7 @@ import {Column, CreateDateColumn, Entity, OneToMany, OneToOne, PrimaryGeneratedC
 import {Cards} from "./cards";
 import { UserPaymentPreferences } from "./user-payment-preferences";
 import { UserSystemPreferences } from "./user-system-preferences";
+import { Category } from "./category";
 
 @Entity('users')
 export class Users {
@@ -35,4 +36,7 @@ export class Users {
 
     @OneToOne(() => UserSystemPreferences, (pref) => pref.user)
     systemPreferences: UserSystemPreferences;
+
+    @OneToMany(() => Category, (category) => category.owner)
+    categories: Category[];
 }
