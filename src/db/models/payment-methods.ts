@@ -12,10 +12,10 @@ export class PaymentMethods {
     @PrimaryGeneratedColumn()
     id: number
     
-    @Column({type: "varchar"})
+    @Column({type: "varchar", length: 50})
     name: string
 
-    @Column({type: "varchar", unique: true})
+    @Column({type: "varchar", length: 50, unique: true})
     slug: string
 
     @Column({name: "requires_card", type: "boolean"})

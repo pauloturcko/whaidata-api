@@ -1,8 +1,8 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Users } from "./users";
 
-@Index(["userId"], {unique: true})
 @Entity("user_system_preferences")
+@Index(["userId"], {unique: true})
 export class UserSystemPreferences {
 
     @PrimaryGeneratedColumn()
@@ -26,7 +26,7 @@ export class UserSystemPreferences {
     @UpdateDateColumn({name: "updated_at", type: "timestamp"})
     updatedAt: Date
 
-    @OneToOne(() => Users, (user) => user.systemPreferences)
+    @OneToOne(() => Users, (user) => user.systemPreferences, {onDelete: "CASCADE"})
     @JoinColumn({name: "user_id"})
     user: Users
 }

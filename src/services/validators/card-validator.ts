@@ -44,7 +44,8 @@ export const createCardValidator = z.object({
             }
             return Number(value);
         })
-        .refine((value) => !isNaN(value) && value >= 100, "O limite deve ser no mínimo 100,00"),
+        .refine((value) => !isNaN(value) && value >= 100, "O limite deve ser no mínimo 100,00")
+        .transform((value) => value.toFixed(2)),
 
     expiresIn: z
         .string()

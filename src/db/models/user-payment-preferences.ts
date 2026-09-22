@@ -2,8 +2,8 @@ import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, Primary
 import { Users } from "./users";
 import { PaymentMethods } from "./payment-methods";
 
-@Index(["userId", "paymentMethodId"], {unique: true})
 @Entity("user_payment_preferences")
+@Index(["userId", "paymentMethodId"], {unique: true})
 export class UserPaymentPreferences {
 
     @PrimaryGeneratedColumn()
@@ -19,16 +19,16 @@ export class UserPaymentPreferences {
     isActive: boolean
     
     @CreateDateColumn({name: "created_at", type: "timestamp"})
-        createdAt: Date
+    createdAt: Date
     
     @UpdateDateColumn({name: "updated_at", type: "timestamp"})
-        updatedAt: Date
+    updatedAt: Date
 
-    @ManyToOne(() => Users, (user) => user.paymentPreferences)
+    @ManyToOne(() => Users, (user) => user.paymentPreferences, {onDelete: "CASCADE"})
     @JoinColumn({name: "user_id"})
     user: Users
 
-    @ManyToOne(() => PaymentMethods)
+    @ManyToOne(() => PaymentMethods, {onDelete: "CASCADE"})
     @JoinColumn({name: "payment_method_id"})
     paymentMethod: PaymentMethods
 }
