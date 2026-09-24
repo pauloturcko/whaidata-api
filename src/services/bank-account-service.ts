@@ -1,0 +1,72 @@
+import { BankAccount } from "../db/models/bank-account";
+import { BankAccountRepository } from "../db/repository/bank-account-repository";
+import { ForbiddenError, GenericError, NotFoundError } from "../errors";
+import { createBankAccountValidator, updateBankAccountValidator } from "./validators/bank-account-validator";
+
+export class BankAccountService {
+    private bankAccountRepository = new BankAccountRepository();
+
+    async create(userId: number, data: unknown) {
+        const {name, accountType, balance} = createBankAccountValidator.parse(data)
+
+        const normalizedName = name.trim().toLowerCase();
+
+        const existingBankAccount = await this.bankAccountRepository.findByUnique({
+            userId,
+            name: normalizedName,
+            accountType
+        })
+
+        if (existingBankAccount) {
+            throw new GenericError("This bank account already exists!")
+        }
+
+        return await this.bankAccountRepository.create({
+            userId,
+            name: normalizedName,
+            accountType,
+            balance
+        })
+    }
+
+    async loadAll(userId: number): Promise<BankAccount[]> {
+        return await this.bankAccountRepository.loadAll(userId)
+    }
+
+    async update(userId: number, data: unknown): Promise<BankAccount> {
+        const parsedData = updateBankAccountValidator.parse(data)
+
+        const bankAccount = await this.bankAccountRepository.loadById(parsedData.id)
+        if(!bankAccount) throw new NotFoundError("Bank account does not exist!")
+        if(bankAccount.userId !== userId) throw new ForbiddenError();
+
+        if(parsedData.name) {
+            parsedData.name = parsedData.name.trim().toLocaleLowerCase()
+        }
+
+        const updatedBankAccountData = {
+            ...bankAccount,
+            ...parsedData
+        }
+
+        const existingBankAccount = await this.bankAccountRepository.findByUnique({
+            userId,
+            name: updatedBankAccountData.name,
+            accountType: updatedBankAccountData.accountType
+        })
+
+        if(existingBankAccount && existingBankAccount.id !== bankAccount.id) {
+            throw new GenericError("This bank account already exists!")
+        }
+
+        return await this.bankAccountRepository.update(updatedBankAccountData)
+    }
+
+    async delete(userId: number, id: number): Promise<void> {
+        const bankAccount = await this.bankAccountRepository.loadById(id)
+        if(!bankAccount) throw new NotFoundError("Bank account does not exist!")
+        if(bankAccount.userId !== userId) throw new ForbiddenError();
+
+        return await this.bankAccountRepository.delete(id)
+    }
+}
