@@ -7,3 +7,7 @@ export interface CreateCategoryDto {
     color: string;
     type: CategoryTypeEnum;
 }
+
+export type UpdateCategoryDto = Partial<CreateCategoryDto> & {
+    id: number
+}

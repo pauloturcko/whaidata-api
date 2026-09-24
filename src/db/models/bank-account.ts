@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
+import { Users } from "./users";
 
 @Unique(["name", "accountType"])
 @Entity("bank_account")
@@ -6,6 +7,9 @@ export class BankAccount {
 
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column({name: "user_id", type: "int"})
+    userId: number;
 
     @Column({type: "varchar"})
     name: string;
@@ -22,4 +26,8 @@ export class BankAccount {
 
     @UpdateDateColumn({name: "updated_at", type: "timestamp"})
     updatedAt: Date;
+
+    @ManyToOne(() => Users, {onDelete: "CASCADE"})
+    @JoinColumn({name: "user_id"})
+    owner: Users
 }   
