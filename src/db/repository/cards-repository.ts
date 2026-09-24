@@ -8,6 +8,7 @@ type UniqueCard = {
     name: string,
     lastFourDigits: string,
 }
+// TODO: Revisar todos os repositories e remover tipagens locais
 
 export class CardsRepository {
     private repository: Repository<Cards>;
@@ -20,12 +21,12 @@ export class CardsRepository {
         return await this.repository.save(data);
     }
 
-    async findByUniqueFields(params: UniqueCard) {
+    async findByUniqueFields({userId, name, lastFourDigits}: UniqueCard) {
         return this.repository.findOne({
             where: {
-                userId: params.userId,
-                name: params.name,
-                lastFourDigits: params.lastFourDigits,
+                userId: userId,
+                name: name,
+                lastFourDigits: lastFourDigits,
             },
         });
     }

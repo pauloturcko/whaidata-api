@@ -3,6 +3,7 @@ import {Cards} from "./cards";
 import { UserPaymentPreferences } from "./user-payment-preferences";
 import { UserSystemPreferences } from "./user-system-preferences";
 import { Category } from "./category";
+import { BankAccount } from "./bank-account";
 
 @Entity('users')
 export class Users {
@@ -39,4 +40,7 @@ export class Users {
 
     @OneToMany(() => Category, (category) => category.owner)
     categories: Category[];
+
+    @OneToMany(() => BankAccount, (bankAccount) => bankAccount.owner)
+    bankAccounts: BankAccount[];
 }

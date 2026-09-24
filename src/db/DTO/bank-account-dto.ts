@@ -4,5 +4,9 @@ export interface CreateBankAccountDto {
     userId: number;
     name: string;
     accountType: AccountTypeEnum;
-    balance: number
+    balance: string
+}
+
+export type UpdateBankAccountDto  = Partial<CreateBankAccountDto> &{
+    id: number,
 }
