@@ -10,18 +10,18 @@ type UniqueCategory = {
 // TODO: Revisar todos os repositories e remover tipagens locais
 
 export class CategoryRepository {
-    private repsitory: Repository<Category>
+    private repository: Repository<Category>
 
     constructor() {
-        this.repsitory = appDataSource.getRepository(Category)
+        this.repository = appDataSource.getRepository(Category)
     }
 
     async create(data: CreateCategoryDto) {
-        await this.repsitory.save(data)
+        return await this.repository.save(data)
     }
 
     async findByUnique({userId, name}: UniqueCategory) {
-        return await this.repsitory.findOne({
+        return await this.repository.findOne({
             where: {
                 userId,
                 name
@@ -30,18 +30,18 @@ export class CategoryRepository {
     }
 
     async loadAll(userId: number): Promise<Category[]> {
-        return await this.repsitory.find({where: {userId}})
+        return await this.repository.find({where: {userId}})
     }
 
     async loadById(id: number): Promise<Category | null> {
-        return await this.repsitory.findOne({where: {id}})
+        return await this.repository.findOne({where: {id}})
     }
 
     async update(data: UpdateCategoryDto) {
-        return await this.repsitory.save({...data})
+        return await this.repository.save({...data})
     }
 
     async delete(id: number): Promise<void> {
-        await this.repsitory.delete({id})
+        await this.repository.delete({id})
     }
 }
