@@ -1,5 +1,6 @@
 import {z} from "zod";
 import {CategoryTypeEnum} from "../../db/enum/category-type-enum";
+import {idValidator} from "./common-validator";
 
 export const createCategoryValidator = z.object({
     name: z
@@ -24,5 +25,9 @@ export const createCategoryValidator = z.object({
 export const updateCategoryValidator = createCategoryValidator
     .partial()
     .extend({
-        id: z.number(),
+        id: idValidator,
     });
+
+export const deleteCategoryValidator = z.object({
+    id: idValidator,
+});

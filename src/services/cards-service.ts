@@ -1,5 +1,5 @@
 import {CardsRepository} from "../db/repository/cards-repository";
-import {createCardValidator, updateCardValidator} from "./validators/card-validator";
+import {createCardValidator, deleteCardValidator, updateCardValidator} from "./validators/card-validator";
 import {GenericError, NotFoundError, ForbiddenError} from "../errors";
 import {Cards} from "../db/models/cards";
 
@@ -53,10 +53,22 @@ export class CardsService {
             ...parsedData
         };
 
+        const existingCard = await this.cardsRepository.findByUniqueFields({
+            userId,
+            name: updatedCardData.name,
+            lastFourDigits: updatedCardData.lastFourDigits,
+        });
+
+        if (existingCard && existingCard.id !== card.id) {
+            throw new GenericError('This card already exists!');
+        }
+
         return await this.cardsRepository.update(updatedCardData);
     }
 
-    async delete(userId: number, id: number): Promise<void> {
+    async delete(userId: number, data: unknown): Promise<void> {
+        const {id} = deleteCardValidator.parse(data);
+
         const card = await this.cardsRepository.loadById(id);
         if (!card) throw new NotFoundError('Card does not exist!');
         if (card.userId !== userId) throw new ForbiddenError();

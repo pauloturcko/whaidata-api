@@ -1,5 +1,5 @@
 import { UserSystemPreferencesRepository } from "../db/repository/user-system-preferences-repository";
-import { GenericError } from "../errors";
+import { NotFoundError } from "../errors";
 import { updateSystemPreferencesValidator } from "./validators/system-preferences-validators";
 
 export class UserSystemPreferencesService {
@@ -14,7 +14,7 @@ export class UserSystemPreferencesService {
         
         const preference = await this.userSystemPreferencesRepository.loadByUserId(userId)
         if (!preference) {
-            throw new GenericError("Preferences not found")
+            throw new NotFoundError("Preferences not found")
         }
 
         Object.assign(preference, parsedData)

@@ -3,7 +3,9 @@ export const swaggerDocument = {
   info: {
     title: "WhaiData API",
     version: "1.0.0",
-    description: "Documentação da API do WhaiData com autenticação e gerenciamento de cartões e métodos de pagamento.",
+    description:
+      "Documentação da API do WhaiData com autenticação e gerenciamento de cartões, contas bancárias, categorias e métodos de pagamento.\n\n" +
+      "Todo erro responde `{ message }`. Erros de validação (400) trazem também `errors: [{ path, message }]`, um item por campo inválido.",
   },
   servers: [
     {
@@ -231,6 +233,140 @@ export const swaggerDocument = {
           },
         },
       },
+
+      // ===== CONTAS BANCÁRIAS =====
+      BankAccountRegisterInput: {
+        type: "object",
+        required: ["name", "accountType"],
+        properties: {
+          name: {
+            type: "string",
+            example: "Nubank",
+            description: "Nome da conta (mínimo de 3 caracteres)",
+          },
+          accountType: {
+            type: "integer",
+            enum: [0, 1, 2, 3, 4],
+            description: "0 = Conta digital, 1 = Conta corrente, 2 = Poupança, 3 = Carteira digital, 4 = Dinheiro",
+            example: 0,
+          },
+          balance: {
+            type: "string",
+            description: "Saldo inicial (padrão 0.00). Aceita negativo e os formatos '5000.00', '5.000,00' ou '5,000.00'",
+            example: "1500.00",
+          },
+        },
+      },
+      BankAccountUpdateInput: {
+        type: "object",
+        required: ["id"], // Apenas o ID é obrigatório no update
+        properties: {
+          id: {
+            type: "integer",
+            description: "ID da conta a ser atualizada (Obrigatório)",
+            example: 1,
+          },
+          name: {
+            type: "string",
+            description: "Novo nome (Opcional)",
+            example: "Inter",
+          },
+          accountType: {
+            type: "integer",
+            enum: [0, 1, 2, 3, 4],
+            description: "Tipo da conta (Opcional)",
+            example: 1,
+          },
+          balance: {
+            type: "string",
+            description: "Novo saldo (Opcional). Se omitido, o saldo atual é mantido",
+            example: "2.300,50",
+          },
+        },
+      },
+      BankAccountDeleteInput: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "integer",
+            description: "ID da conta a ser removida",
+            example: 1,
+          },
+        },
+      },
+
+      // ===== CATEGORIAS =====
+      CategoryRegisterInput: {
+        type: "object",
+        required: ["name", "icon", "color", "type"],
+        properties: {
+          name: {
+            type: "string",
+            example: "Alimentação",
+            description: "Nome da categoria (mínimo de 3 caracteres)",
+          },
+          icon: {
+            type: "string",
+            example: "utensils",
+            description: "Identificador do ícone (até 50 caracteres)",
+          },
+          color: {
+            type: "string",
+            example: "#FF5733",
+            description: "Cor em hexadecimal no formato #RRGGBB",
+          },
+          type: {
+            type: "integer",
+            enum: [0, 1],
+            description: "0 = Receita, 1 = Despesa",
+            example: 1,
+          },
+        },
+      },
+      CategoryUpdateInput: {
+        type: "object",
+        required: ["id"], // Apenas o ID é obrigatório no update
+        properties: {
+          id: {
+            type: "integer",
+            description: "ID da categoria a ser atualizada (Obrigatório)",
+            example: 1,
+          },
+          name: {
+            type: "string",
+            description: "Novo nome (Opcional)",
+            example: "Mercado",
+          },
+          icon: {
+            type: "string",
+            description: "Novo ícone (Opcional)",
+            example: "shopping-cart",
+          },
+          color: {
+            type: "string",
+            description: "Nova cor (Opcional)",
+            example: "#00AA55",
+          },
+          type: {
+            type: "integer",
+            enum: [0, 1],
+            description: "Tipo da categoria (Opcional)",
+            example: 1,
+          },
+        },
+      },
+      CategoryDeleteInput: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "integer",
+            description: "ID da categoria a ser removida",
+            example: 1,
+          },
+        },
+      },
     },
   },
   // Definição de cada rota, método HTTP, parâmetros e respostas
@@ -256,6 +392,9 @@ export const swaggerDocument = {
           },
           400: {
             description: "Erro de validação nos dados enviados",
+          },
+          409: {
+            description: "E-mail já cadastrado",
           },
           500: {
             description: "Erro interno do servidor",
@@ -388,8 +527,14 @@ export const swaggerDocument = {
           401: {
             description: "Não autorizado",
           },
+          403: {
+            description: "O cartão pertence a outro usuário",
+          },
+          404: {
+            description: "Cartão não encontrado",
+          },
           409: {
-            description: "Erro de negócio ao atualizar cartão",
+            description: "Já existe um cartão com o mesmo nome e últimos 4 dígitos",
           },
         },
       },
@@ -413,8 +558,17 @@ export const swaggerDocument = {
           200: {
             description: "Cartão excluído com sucesso",
           },
+          400: {
+            description: "ID ausente ou inválido",
+          },
           401: {
             description: "Não autorizado",
+          },
+          403: {
+            description: "O cartão pertence a outro usuário",
+          },
+          404: {
+            description: "Cartão não encontrado",
           },
         },
       },
@@ -464,8 +618,246 @@ export const swaggerDocument = {
           401: {
             description: "Não autorizado",
           },
-          409: {
+          404: {
             description: "Método de pagamento não encontrado",
+          },
+        },
+      },
+    },
+
+    // ------------------ ROTAS DE CONTAS BANCÁRIAS ------------------
+    "/bank-accounts/register": {
+      post: {
+        tags: ["Contas Bancárias"],
+        summary: "Cadastrar uma nova conta bancária para o usuário logado",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/BankAccountRegisterInput",
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Conta bancária registrada com sucesso",
+          },
+          400: {
+            description: "Erro de validação nos campos da conta",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          409: {
+            description: "Já existe uma conta com o mesmo nome e tipo",
+          },
+        },
+      },
+    },
+    "/bank-accounts/user-bank-accounts": {
+      get: {
+        tags: ["Contas Bancárias"],
+        summary: "Listar todas as contas bancárias do usuário logado",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Lista de contas bancárias retornada com sucesso",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+        },
+      },
+    },
+    "/bank-accounts/update": {
+      patch: {
+        tags: ["Contas Bancárias"],
+        summary: "Atualizar dados de uma conta bancária",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/BankAccountUpdateInput",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Conta bancária atualizada com sucesso",
+          },
+          400: {
+            description: "Erro de validação",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          403: {
+            description: "A conta pertence a outro usuário",
+          },
+          404: {
+            description: "Conta bancária não encontrada",
+          },
+          409: {
+            description: "Já existe uma conta com o mesmo nome e tipo",
+          },
+        },
+      },
+    },
+    "/bank-accounts/delete": {
+      delete: {
+        tags: ["Contas Bancárias"],
+        summary: "Remover uma conta bancária",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/BankAccountDeleteInput",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Conta bancária excluída com sucesso",
+          },
+          400: {
+            description: "ID ausente ou inválido",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          403: {
+            description: "A conta pertence a outro usuário",
+          },
+          404: {
+            description: "Conta bancária não encontrada",
+          },
+        },
+      },
+    },
+
+    // ------------------ ROTAS DE CATEGORIAS ------------------
+    "/categories/register": {
+      post: {
+        tags: ["Categorias"],
+        summary: "Cadastrar uma nova categoria para o usuário logado",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/CategoryRegisterInput",
+              },
+            },
+          },
+        },
+        responses: {
+          201: {
+            description: "Categoria registrada com sucesso",
+          },
+          400: {
+            description: "Erro de validação nos campos da categoria",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          409: {
+            description: "Já existe uma categoria com o mesmo nome",
+          },
+        },
+      },
+    },
+    "/categories/user-categories": {
+      get: {
+        tags: ["Categorias"],
+        summary: "Listar todas as categorias do usuário logado",
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description: "Lista de categorias retornada com sucesso",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+        },
+      },
+    },
+    "/categories/update": {
+      patch: {
+        tags: ["Categorias"],
+        summary: "Atualizar dados de uma categoria",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/CategoryUpdateInput",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Categoria atualizada com sucesso",
+          },
+          400: {
+            description: "Erro de validação",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          403: {
+            description: "A categoria pertence a outro usuário",
+          },
+          404: {
+            description: "Categoria não encontrada",
+          },
+          409: {
+            description: "Já existe uma categoria com o mesmo nome",
+          },
+        },
+      },
+    },
+    "/categories/delete": {
+      delete: {
+        tags: ["Categorias"],
+        summary: "Remover uma categoria",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/CategoryDeleteInput",
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: "Categoria excluída com sucesso",
+          },
+          400: {
+            description: "ID ausente ou inválido",
+          },
+          401: {
+            description: "Não autorizado",
+          },
+          403: {
+            description: "A categoria pertence a outro usuário",
+          },
+          404: {
+            description: "Categoria não encontrada",
           },
         },
       },

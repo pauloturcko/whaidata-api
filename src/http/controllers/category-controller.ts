@@ -1,27 +1,26 @@
 import {Request, Response} from "express";
-import {CardsService} from "../../services/cards-service";
+import {CategoryService} from "../../services/category-service";
 import {handleError} from "../helpers/handle-error";
 
-export class CardsController {
-    private cardService: CardsService;
+export class CategoryController {
+    private categoryService: CategoryService;
 
     constructor() {
-        this.cardService = new CardsService();
+        this.categoryService = new CategoryService();
     }
 
     async register(req: Request, res: Response) {
         try {
             const userId = req.user?.id;
-
             if (!userId) {
                 return res.status(401).json({message: "Unauthorized"});
             }
 
-            const registeredCard = await this.cardService.create(userId, req.body);
+            const registeredCategory = await this.categoryService.create(userId, req.body);
 
-            res.status(201).json({
-                message: "Card registered successfully",
-                registeredCard,
+            return res.status(201).json({
+                message: "Category registered successfully",
+                registeredCategory,
             });
         } catch (error) {
             return handleError(res, error);
@@ -35,36 +34,36 @@ export class CardsController {
                 return res.status(401).json({message: "Unauthorized"});
             }
 
-            const cards = await this.cardService.loadAll(userId)
-            res.status(200).json({cards})
+            const categories = await this.categoryService.loadAll(userId);
+            return res.status(200).json({categories});
         } catch (error) {
             return handleError(res, error);
         }
     }
 
-    public async update(req: Request, res: Response) {
+    async update(req: Request, res: Response) {
         try {
             const userId = req.user?.id;
             if (!userId) {
                 return res.status(401).json({message: "Unauthorized"});
             }
 
-            const card = await this.cardService.update(userId, req.body)
-            res.status(200).json({card})
+            const category = await this.categoryService.update(userId, req.body);
+            return res.status(200).json({category});
         } catch (error) {
             return handleError(res, error);
         }
     }
 
-    public async delete(req: Request, res: Response) {
+    async delete(req: Request, res: Response) {
         try {
             const userId = req.user?.id;
             if (!userId) {
                 return res.status(401).json({message: "Unauthorized"});
             }
 
-            await this.cardService.delete(userId, req.body);
-            res.status(200).json({message: "Card deleted successfully"})
+            await this.categoryService.delete(userId, req.body);
+            return res.status(200).json({message: "Category deleted successfully"});
         } catch (error) {
             return handleError(res, error);
         }
