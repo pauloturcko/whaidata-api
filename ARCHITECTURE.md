@@ -12,8 +12,8 @@ Atualize este arquivo quando tomar uma decisão de arquitetura não-trivial. Nã
 
 ## Camadas: Route → Controller → Service → Repository
 
-- **Controller**: só HTTP. Lê `req`, chama o service, decide o status code e o shape do JSON de resposta. Não fala com repository nem com banco.
-- **Service**: regra de negócio. É a camada que decide "pode ou não pode", "o que acontece quando X".
+- **Controller**: só HTTP. Repassa `req.body`/`req.params` crus pro service (não valida nada), escolhe o status de sucesso e o shape do JSON de resposta, e manda qualquer erro pro `handleError`. Não fala com repository nem com banco.
+- **Service**: regra de negócio e validação de entrada (ver seção Validação). É a camada que decide "pode ou não pode", "o que acontece quando X".
 - **Repository**: acesso a dado puro, sem regra de negócio.
 
 **Regra combinada**: um Service pode chamar um Repository de outro domínio diretamente (pulando o Service daquele domínio) quando a operação não carrega nenhuma regra de negócio própria — só leitura ou escrita direta, sem validação condicional. Exemplos atuais:
@@ -32,6 +32,7 @@ Se um dia existir regra de negócio nessas operações (exemplo puramente hipot�
 
 - `password` na entity `Users` é `select: false` ([users.ts](src/db/models/users.ts)) — nenhuma query traz o hash por padrão. Só [`UsersRepository.loadByEmail`](src/db/repository/users-repository.ts) pede explicitamente via `addSelect`, porque é o único lugar que precisa comparar a senha (login).
 - Isso foi corrigido depois de um vazamento real: `UserSystemPreferencesRepository.loadByUserId` carregava a relation `user` inteira (incluindo hash) sem essa proteção. A relation foi removida por ser desnecessária ali (o `user` já vem de outra fonte na mesma chamada).
+- `select: false` **não** protege o retorno do `save()`: ele devolve o próprio objeto inserido, com o hash. Por isso `UsersController.register` monta a resposta campo a campo — antes o `POST /users/register` devolvia o hash no JSON.
 
 ## DTOs: pasta `db/DTO`
 
@@ -47,21 +48,34 @@ A pasta mistura dois conceitos que merecem atenção na hora de adicionar algo n
 
 ## Validação (Zod) e normalização de dados
 
-- `name` de usuário e de cartão são normalizados (`trim().toLowerCase()`) antes de salvar ou comparar — evita duplicata por diferença de caixa/espaço (ver `Unique(["userId", "name", "lastFourDigits"])` em [cards.ts](src/db/models/cards.ts)).
+- **O `.parse()` fica no Service, nunca no Controller.** O service recebe `data: unknown` e valida na primeira linha; o controller só repassa `req.body`/`req.params`. Assim qualquer chamador do service (rota hoje; job, script ou teste amanhã) passa pela mesma validação sem precisar lembrar. Nas primeiras versões (#0001–#0003) o parse ficava no controller; foi movido de propósito no #0004/#0005.
+- Isso inclui ids: `delete` recebe o body e valida `{ id }` como o `update` já fazia, e o toggle de forma de pagamento valida `req.params` (com `z.coerce`, porque path param chega como string). Não é formalidade: o TypeORM trata `id: undefined` como "sem filtro", e `findOne({ where: { id: undefined } })` devolve a **primeira linha da tabela**, de qualquer usuário.
+- Validators reaproveitados entre domínios ficam em [common-validator.ts](src/services/validators/common-validator.ts): `idValidator` (inteiro positivo) e `moneyValidator`.
+- `name` de cartão, conta bancária e categoria é normalizado (`trim().toLowerCase()`) no validator antes de salvar ou comparar — evita duplicata por diferença de caixa/espaço (ver os `@Unique` nas entities). O `trim` vem antes do `min(3)`, senão `"   a"` passaria.
 - `cardFlag` aceita tanto nome (`visa`) quanto código numérico (`1`) no input — flexibilidade deliberada de input, sempre normalizado pro enum internamente ([card-validator.ts](src/services/validators/card-validator.ts)).
-- `limit` do cartão aceita formato BR (`8.000,00`) e US (`8,000.00`) e desambigua pela posição do último separador — mesma ideia, tolerância de input.
+- Valores monetários (`limit` do cartão, `balance` da conta) usam o mesmo `moneyValidator`: aceita formato BR (`8.000,00`) e US (`8,000.00`), com ou sem decimais. Como decimal tem no máximo 2 dígitos, só o último separador seguido de 1–2 dígitos é decimal e qualquer outro é de milhar — `8.000` é oito mil (antes virava `8.00`). O teto é `9.999.999.999,99`, o máximo do `numeric(12,2)` das colunas. `balance` aceita negativo; `limit` exige no mínimo 100.
+- No update de conta bancária, `balance` é redefinido como `.optional()` depois do `.partial()` de propósito: no Zod 4 o `.partial()` mantém o `.default("0.00")`, e todo PATCH sem `balance` zeraria o saldo.
 - `expiresIn` do cartão rejeita datas já vencidas (antes do mês atual).
 
 ## Tratamento de erros
 
-- `GenericError` é o erro de regra de negócio genérico (sem código, só mensagem); `UnauthorizedError` é específico de auth.
-- Convenção nos controllers de **cards** e **payment-methods**: `ZodError` → 400, `GenericError` → 409, qualquer outra coisa → 500.
-- **Inconsistência encontrada, não corrigida ainda**: `UsersController.register` não tem o branch de `GenericError` → 409 que os outros controllers têm. Hoje, "email already exists" (que é um `GenericError`) cai no `else` genérico e vira 500 em vez de 409/400. Ver pergunta em aberto abaixo.
+Todo controller termina o `catch` com [`handleError`](src/http/helpers/handle-error.ts), o único lugar que traduz erro → status HTTP. Antes cada controller tinha seu próprio `if/else`, e eles divergiam (formato do 400, qual erro virava 409).
+
+| Erro lançado | Status | Corpo |
+|---|---|---|
+| `ZodError` | 400 | `{ message: "Validation error", errors: [{ path, message }] }` |
+| `UnauthorizedError` | 401 | `{ message }` |
+| `ForbiddenError` | 403 | `{ message }` |
+| `NotFoundError` | 404 | `{ message }` |
+| `GenericError` | 409 | `{ message }` |
+| qualquer outro | 500 | `{ message: "Internal server error" }` — detalhe só no `console.error` |
+
+- `GenericError` hoje significa conflito/duplicidade (email, cartão, conta, categoria), por isso 409. Erro de negócio que não seja conflito deve ganhar classe própria em vez de reaproveitar o `GenericError`.
+- O 500 nunca serializa o erro na resposta: um `QueryFailedError` do TypeORM carrega a query SQL, os parâmetros e o erro do Postgres, e antes isso ia inteiro pro cliente.
 
 ---
 
 ## Perguntas em aberto (pra você responder, não assumi nada aqui)
 
-1. **`UsersController.register` não mapeia `GenericError` pra 409** como os outros controllers fazem — isso foi esquecido ou é proposital (login/registro deveria sempre devolver 500 em erro de negócio)?
-2. **`authMiddleware` busca o usuário completo no banco a cada request autenticado**, em vez de confiar só no `userId` do JWT decodificado. Isso é intencional (ex: permitir bloquear/deletar usuário e invalidar acesso na hora, sem esperar o token expirar), ou só não foi otimizado ainda?
-3. **`PaymentMethodsService.getUserPreferences`** (rota `GET /payment-method/list`) devolve o array de preferências direto do repository, com a entity completa (`paymentMethod` aninhado com todos os campos) — sem o mapeamento pro DTO trimado que criamos pro login/`/me`. Isso é proposital (endpoints diferentes, contratos diferentes), ou deveria usar o mesmo `UserPaymentMethodsDto`?
+1. **`authMiddleware` busca o usuário completo no banco a cada request autenticado**, em vez de confiar só no `userId` do JWT decodificado. Isso é intencional (ex: permitir bloquear/deletar usuário e invalidar acesso na hora, sem esperar o token expirar), ou só não foi otimizado ainda?
+2. **`PaymentMethodsService.getUserPreferences`** (rota `GET /payment-method/list`) devolve o array de preferências direto do repository, com a entity completa (`paymentMethod` aninhado com todos os campos) — sem o mapeamento pro DTO trimado que criamos pro login/`/me`. Isso é proposital (endpoints diferentes, contratos diferentes), ou deveria usar o mesmo `UserPaymentMethodsDto`?

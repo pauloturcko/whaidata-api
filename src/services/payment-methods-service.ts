@@ -1,6 +1,7 @@
 import { UserPaymentPreferencesRepository } from "../db/repository/user-payment-preferences-repository";
 import { UsersRepository } from "../db/repository/users-repository";
 import { NotFoundError, UnauthorizedError } from "../errors";
+import { togglePaymentPreferenceValidator } from "./validators/payment-methods-validator";
 
 export class PaymentMethodsService {
     private userPaymentPreferencesRepository: UserPaymentPreferencesRepository;
@@ -23,7 +24,9 @@ export class PaymentMethodsService {
         return await this.userPaymentPreferencesRepository.loadByUserId(userId)
     }
 
-    async togglePreference(userId: number, paymentMethodId: number) {
+    async togglePreference(userId: number, data: unknown) {
+        const {id: paymentMethodId} = togglePaymentPreferenceValidator.parse(data)
+
         const preference = await this.userPaymentPreferencesRepository.findByUserAndMethod(userId, paymentMethodId)
 
         if(!preference) {

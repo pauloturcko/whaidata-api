@@ -1,7 +1,7 @@
 import { Category } from "../db/models/category";
 import { CategoryRepository } from "../db/repository/category-repository";
 import { ForbiddenError, GenericError, NotFoundError } from "../errors";
-import { createCategoryValidator, updateCategoryValidator } from "./validators/category-validator";
+import { createCategoryValidator, deleteCategoryValidator, updateCategoryValidator } from "./validators/category-validator";
 
 export class CategoryService {
     private categoryRepository = new CategoryRepository();
@@ -58,7 +58,9 @@ export class CategoryService {
         return await this.categoryRepository.update(updateCategoryData)
     }
 
-    async delete(userId: number, id: number): Promise<void> {
+    async delete(userId: number, data: unknown): Promise<void> {
+        const {id} = deleteCategoryValidator.parse(data)
+
         const category = await this.categoryRepository.loadById(id)
         if(!category) throw new NotFoundError("Category does not exist!")
         if(category.userId !== userId) throw new ForbiddenError();

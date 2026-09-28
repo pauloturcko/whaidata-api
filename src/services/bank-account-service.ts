@@ -1,7 +1,7 @@
 import { BankAccount } from "../db/models/bank-account";
 import { BankAccountRepository } from "../db/repository/bank-account-repository";
 import { ForbiddenError, GenericError, NotFoundError } from "../errors";
-import { createBankAccountValidator, updateBankAccountValidator } from "./validators/bank-account-validator";
+import { createBankAccountValidator, deleteBankAccountValidator, updateBankAccountValidator } from "./validators/bank-account-validator";
 
 export class BankAccountService {
     private bankAccountRepository = new BankAccountRepository();
@@ -62,7 +62,9 @@ export class BankAccountService {
         return await this.bankAccountRepository.update(updatedBankAccountData)
     }
 
-    async delete(userId: number, id: number): Promise<void> {
+    async delete(userId: number, data: unknown): Promise<void> {
+        const {id} = deleteBankAccountValidator.parse(data)
+
         const bankAccount = await this.bankAccountRepository.loadById(id)
         if(!bankAccount) throw new NotFoundError("Bank account does not exist!")
         if(bankAccount.userId !== userId) throw new ForbiddenError();

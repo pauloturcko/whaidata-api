@@ -1,7 +1,6 @@
 import {PaymentMethodsService} from "../../services/payment-methods-service";
 import {Request, Response} from "express";
-import {ZodError} from "zod";
-import {NotFoundError, UnauthorizedError} from "../../errors";
+import {handleError} from "../helpers/handle-error";
 
 export class PaymentMethodsController {
     private paymentMethodsService: PaymentMethodsService
@@ -22,13 +21,7 @@ export class PaymentMethodsController {
             return res.status(200).json(preferences);
 
         } catch (error) {
-            if (error instanceof ZodError) {
-                return res.status(400).json({error: error.message});
-            } else if (error instanceof UnauthorizedError) {
-                return res.status(401).json({message: error.message});
-            } else {
-                return res.status(500).json({error});
-            }
+            return handleError(res, error);
         }
     }
 
@@ -39,20 +32,11 @@ export class PaymentMethodsController {
                 return res.status(401).json({message: "Unauthorized"})
             }
 
-            const paymentMethodId = Number(req.params.id);
-            const updated = await this.paymentMethodsService.togglePreference(userId, paymentMethodId)
+            const updated = await this.paymentMethodsService.togglePreference(userId, req.params)
 
             return res.status(200).json(updated)
         } catch (error) {
-            if (error instanceof ZodError) {
-                return res.status(400).json({error: error.message});
-            } else if (error instanceof NotFoundError) {
-                return res.status(404).json({message: error.message});
-            } else if (error instanceof UnauthorizedError) {
-                return res.status(401).json({message: error.message});
-            } else {
-                return res.status(500).json({error});
-            }
+            return handleError(res, error);
         }
     }
 }

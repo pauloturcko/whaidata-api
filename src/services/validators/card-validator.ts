@@ -1,14 +1,16 @@
 import {z} from "zod";
 import {CardTypeEnum} from "../../db/enum/card-type-enum";
 import {CardFlagEnum} from "../../db/enum/card-flag-enum";
+import {idValidator, moneyValidator} from "./common-validator";
 
 export const createCardValidator = z.object({
     name: z
         .string()
-        .min(3)
-        .transform((value) => value.trim().toLowerCase()),
+        .trim()
+        .toLowerCase()
+        .min(3),
 
-    cardType: z.nativeEnum(CardTypeEnum),
+    cardType: z.enum(CardTypeEnum),
 
     cardFlag: z
         .coerce
@@ -22,29 +24,8 @@ export const createCardValidator = z.object({
             return Number(value) as CardFlagEnum;
         }),
 
-    limit: z
-        .coerce
-        .string()
-        .regex(
-            /^(\d{1,3}(\.\d{3})*(,\d{1,2})?|\d{1,3}(,\d{3})*(\.\d{1,2})?|\d+([.,]\d{1,2})?)$/,
-            "Limite inválido"
-        )
-        .transform((value) => {
-            if (value.includes(",") && value.includes(".")) {
-                if (value.indexOf(".") < value.indexOf(",")) {
-                    // Brazilian format: 8.000,00
-                    return Number(value.replace(/\./g, "").replace(",", "."));
-                } else {
-                    // US format: 8,000.00
-                    return Number(value.replace(/,/g, ""));
-                }
-            }
-            if (value.includes(",")) {
-                return Number(value.replace(",", "."));
-            }
-            return Number(value);
-        })
-        .refine((value) => !isNaN(value) && value >= 100, "O limite deve ser no mínimo 100,00")
+    limit: moneyValidator("Limite inválido")
+        .refine((value) => value >= 100, "O limite deve ser no mínimo 100,00")
         .transform((value) => value.toFixed(2)),
 
     expiresIn: z
@@ -73,5 +54,9 @@ export const createCardValidator = z.object({
 export const updateCardValidator = createCardValidator
     .partial()
     .extend({
-        id: z.number(),
+        id: idValidator,
     });
+
+export const deleteCardValidator = z.object({
+    id: idValidator,
+});

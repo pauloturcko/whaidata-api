@@ -9,6 +9,8 @@ import { userRouter } from "./http/routes/user-routes";
 import { authRouter } from "./http/routes/auth-routes";
 import { cardRouter } from "./http/routes/card-routes";
 import { paymentMethodsRouter } from "./http/routes/payment-methods-routes";
+import { bankAccountRouter } from "./http/routes/bank-account-routes";
+import { categoryRouter } from "./http/routes/category-routes";
 
 const app = express();
 const allowedOrigins = process.env.CLIENT_URL
@@ -37,6 +39,8 @@ app.use("/users", userRouter);
 app.use("/users", authRouter);
 app.use("/cards", cardRouter);
 app.use("/payment-method", paymentMethodsRouter);
+app.use("/bank-accounts", bankAccountRouter);
+app.use("/categories", categoryRouter);
 
 appDataSource
   .initialize()
